@@ -1,5 +1,20 @@
 
 
+
+getgenv().KEYBINDS = {
+    ["Toggle Reach"] = "Z",
+    ["Toggle AC"] = "Q",
+    ["Increase Reach"] = "F",
+    ["Decrease Reach"] = "G",
+    ["Toggle Script"] = "X",
+    ["Notifications Toggle"] = "N",
+}
+
+
+
+
+
+
 getgenv().AURA = {
     ["Size"] = 4,
     ["Enabled"] = true,
@@ -15,14 +30,6 @@ getgenv().SETTINGS = {
     ["Team Check"] = false,
 }
 
-getgenv().KEYBINDS = {
-    ["Toggle Reach"] = "Z",
-    ["Toggle AC"] = "Q",
-    ["Increase Reach"] = "E",
-    ["Decrease Reach"] = "R",
-    ["Toggle Script"] = "X",
-    ["Notifications Toggle"] = "N",
-}
 
 local StarterGui = game:GetService("StarterGui")
 local Players = game:GetService("Players")
