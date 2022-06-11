@@ -1,0 +1,157 @@
+
+
+getgenv().AURA = {
+    ["Size"] = 4,
+    ["Enabled"] = true,
+    ["Hit_Limbs"] = {'Torso','Right Arm','Left Arm','HumanoidRootPart'}
+}
+
+getgenv().SETTINGS = {
+    ["Running"] = true,
+    ["Increase Size"] = .5,
+    ["Decrease Size"] = .5,
+    ["Notifications"] = true,
+    ["Auto Clicker"] = false,
+    ["Team Check"] = false,
+}
+
+getgenv().KEYBINDS = {
+    ["Toggle Reach"] = "Z",
+    ["Toggle AC"] = "Q",
+    ["Increase Reach"] = "E",
+    ["Decrease Reach"] = "R",
+    ["Toggle Script"] = "X",
+    ["Notifications Toggle"] = "N",
+}
+
+local StarterGui = game:GetService("StarterGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function SendNotification(Ti,Te)
+    StarterGui:SetCore('SendNotification', {Title = tostring(Ti), Text = tostring(Te), Duration = 0.3})
+end
+
+local Mouse = LocalPlayer:GetMouse()
+
+Mouse.KeyDown:Connect(function(key)
+    if key == string.lower(getgenv().KEYBINDS["Toggle Reach"]) then
+        if getgenv().SETTINGS["Running"] == false then return end
+        getgenv().AURA["Enabled"] = not getgenv().AURA["Enabled"]
+        if getgenv().SETTINGS["Notifications"] == true then
+            SendNotification("TouchWare","Magnitude = "..tostring(getgenv().AURA["Enabled"]))
+        end
+    elseif key == string.lower(getgenv().KEYBINDS["Toggle AC"]) then
+        if getgenv().SETTINGS["Running"] == false then return end
+        getgenv().SETTINGS["Auto Clicker"] = not getgenv().SETTINGS["Auto Clicker"]
+        if getgenv().SETTINGS["Notifications"] == true then
+            SendNotification("TouchWare","AutoLunge = "..tostring(getgenv().SETTINGS["Auto Clicker"]))
+        end
+    elseif key == string.lower(getgenv().KEYBINDS["Increase Reach"]) then
+        if getgenv().SETTINGS["Running"] == false then return end
+        getgenv().AURA["Size"] = getgenv().AURA["Size"] + getgenv().SETTINGS["Increase Size"]
+        if getgenv().SETTINGS["Notifications"] == true then
+            SendNotification("TouchWare","Magnitude = "..getgenv().AURA["Size"])
+        end
+    elseif key == string.lower(getgenv().KEYBINDS["Decrease Reach"]) then
+        if getgenv().SETTINGS["Running"] == false then return end
+        getgenv().AURA["Size"] = getgenv().AURA["Size"] - getgenv().SETTINGS["Decrease Size"]
+        if getgenv().SETTINGS["Notifications"] == true then
+            SendNotification("TouchWare","Magnitude = "..getgenv().AURA["Size"])
+        end
+    elseif key == string.lower(getgenv().KEYBINDS["Notifications Toggle"]) then
+        getgenv().SETTINGS["Notifications"] = not getgenv().SETTINGS["Notifications"]
+        SendNotification("TouchWare","Updates = "..tostring(getgenv().SETTINGS["Notifications"]))
+    elseif key == string.lower(getgenv().KEYBINDS["Toggle Script"]) then
+        getgenv().SETTINGS["Running"] = not getgenv().SETTINGS["Running"]
+        if getgenv().SETTINGS["Notifications"] == true then
+            SendNotification("TouchWare","TouchWare Script = "..tostring(getgenv().SETTINGS["Running"]))
+        end
+    end
+end)
+
+
+local HitParts = {}
+
+touch = 0
+untouch = 1
+
+local FTI = function(hit,handle)
+    local Humanoid = hit.Parent:FindFirstChild("Humanoid")
+    if Humanoid and Humanoid.Health ~= 0 and hit.Parent.Name ~= LocalPlayer.Character.Name then
+        local Region = Region3.new(handle.Position, handle.Position)
+        local InRegion = game.Workspace:FindPartsInRegion3(Region)
+            for _,v in pairs(InRegion) do
+                        for i,parts in pairs(hit.Parent:GetChildren()) do
+                            if v:IsA("BasePart") and v:FindFirstChildOfClass("TouchTransmitter") then
+                                if handle.Parent.GripUp.Z == 0 then
+                                if table.find(getgenv().AURA['Hit_Limbs'],parts.Name) then 
+                                    if not table.find(HitParts,parts.Name) then
+                                        if #HitParts >= 2 then table.clear(HitParts) end
+                                        table.insert(HitParts,parts.Name)
+                                        firetouchinterest(parts,v,touch)
+                                        firetouchinterest(parts,handle,touch)
+                        end
+                                end
+                                end
+                    else
+                        for i,parts in pairs(hit.Parent:GetChildren()) do
+                            if parts:IsA("BasePart") and v:FindFirstChildOfClass("TouchTransmitter") then
+                                if handle.Parent.GripUp.Z == 0 then
+                                if table.find(getgenv().AURA['Hit_Limbs'],parts.Name) then
+                                        firetouchinterest(parts,v,touch)
+                                        firetouchinterest(parts,handle,touch)
+                                end
+                                end
+                        end
+                end
+                end
+                end
+                end
+end
+end
+
+local IsTeam = function(Player)
+    if Player.Team == LocalPlayer.Team then
+        return true
+    else 
+        return false
+    end
+end
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if getgenv().SETTINGS["Running"] == false then return end
+    if getgenv().AURA["Enabled"] == false then return end
+    local Tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+    if Tool then
+        if getgenv().SETTINGS["Auto Clicker"] and LocalPlayer.Character.Humanoid.Health ~= 0 then Tool:Activate() end
+        local Handle = Tool:FindFirstChild("Handle")
+        if Handle then
+            local Size = getgenv().AURA["Size"]
+            if getgenv().SETTINGS["Team Check"] == true then
+                for i,v in pairs(game:GetService("Players"):GetPlayers()) do
+                    if IsTeam(v) == false then
+                        local HRP = v.Character and v.Character:FindFirstChild("HumanoidRootPart")
+                        if HRP then
+                            local Distance = (HRP.Position - Handle.Position).Magnitude
+                            if Distance <= Size then
+                                FTI(HRP,Handle)
+                            end
+                        end
+                    end
+                end
+            else
+                for i,v in pairs(game:GetService("Players"):GetPlayers()) do
+                    local HRP = v.Character and v.Character:FindFirstChild("HumanoidRootPart")
+                    if HRP then
+                        local Distance = (HRP.Position - Handle.Position).Magnitude
+                        if Distance <= Size then
+                            FTI(HRP,Handle)
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
